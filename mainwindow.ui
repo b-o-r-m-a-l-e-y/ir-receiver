@@ -20,7 +20,7 @@
       <x>19</x>
       <y>19</y>
       <width>251</width>
-      <height>211</height>
+      <height>221</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -41,6 +41,13 @@
       <widget class="QLabel" name="statusLabel">
        <property name="text">
         <string>Status:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="BytesCtrLabel">
+       <property name="text">
+        <string>Bytes received:</string>
        </property>
       </widget>
      </item>

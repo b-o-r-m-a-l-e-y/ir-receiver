@@ -56,12 +56,10 @@
 #include <QTextStream>
 
 SlaveThread::SlaveThread(QObject *parent) :
-    QThread(parent), rawFile("outRawFile.bin")
+    QThread(parent)
 {
-    //rawFile("outRawFile.bin");
-    if (!rawFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        //emit error(tr("Can't open file"));
-    }
+    rawFile.setFileName("outRawFile.bin");
+    rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
 }
 
 SlaveThread::~SlaveThread()
@@ -85,9 +83,6 @@ void SlaveThread::startSlave(const QString &portName, int waitTimeout, const QSt
 
 void SlaveThread::run()
 {
-
-    QTextStream stream(&rawFile);
-
     bool currentPortNameChanged = false;
 
     m_mutex.lock();
@@ -102,42 +97,70 @@ void SlaveThread::run()
     m_mutex.unlock();
     QSerialPort serial;
 
+    serial.setPortName(currentPortName);
+    if (!serial.open(QIODevice::ReadWrite)) {
+        emit error(tr("Can't open %1, error code %2")
+                   .arg(m_portName).arg(serial.error()));
+        return;
+    }
+    emit changeState("Serial port opened");
+    parserState = Idle;
+    bytesCtr = 0;
+
     while (!m_quit) {
-        if (currentPortNameChanged) {
-            serial.close();
-            serial.setPortName(currentPortName);
-
-            if (!serial.open(QIODevice::ReadWrite)) {
-                emit error(tr("Can't open %1, error code %2")
-                           .arg(m_portName).arg(serial.error()));
-                return;
-            }
-        }
-
         if (serial.waitForReadyRead(currentWaitTimeout)) {
+            //serial.read(&buffer, 1);
+            //emit request(tr("Data received"));
             // read request
+            bytesCtr += serial.bytesAvailable();
             receivedData = serial.readAll();
-            emit request(tr("Data received"));
             while (serial.waitForReadyRead(10))
             {
+                bytesCtr += serial.bytesAvailable();
                 receivedData += serial.readAll();
-                emit request(tr("Data received"));
+                emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
+                switch (parserState) {
+                case Idle:
+                    if (bytesCtr>0){
+                        parserState = Preamble;
+                    }
+                    break;
+                case Preamble:
+                    if (bytesCtr>=4) {
+                        QByteArray tmp = receivedData.left(4);
+                        if (tmp == PREAMBLE) {
+                            parserState=Length;
+                            emit changeState("Preamble Catched");
+                        }
+                    }
+                    break;
+                case Length:
+                    if (bytesCtr>=8) {
+                        QByteArray size = receivedData.mid(4, 4);
+                        fileSize = size.toInt();
+                        parserState = Data;
+                        emit changeState(tr("File size %1. Receiving Data").arg(fileSize));
+                    }
+                    break;
+                case Data:
+                    if (bytesCtr>=8+fileSize) {
+                        parserState = CRC;
+                        emit changeState("End of Data");
+                    }
+                    break;
+                case CRC:
+                    if (bytesCtr>=8+fileSize+16) {
+                        parserState = Received;
+                        emit changeState("CRC catched");
+                    }
+                    break;
+                case Received:
+                    break;
+                }
             }
-            stream << receivedData << Qt::endl;
-        } else {
-            emit timeout(tr("Wait read request timeout %1")
-                         .arg(QTime::currentTime().toString()));
+            emit request(tr("Data received"));
+            rawFile.write(receivedData);
         }
-        m_mutex.lock();
-        if (currentPortName != m_portName) {
-            currentPortName = m_portName;
-            currentPortNameChanged = true;
-        } else {
-            currentPortNameChanged = false;
-        }
-        currentWaitTimeout = m_waitTimeout;
-        currentRespone = m_response;
-        m_mutex.unlock();
     }
 
 }

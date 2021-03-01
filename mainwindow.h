@@ -21,6 +21,8 @@ public:
     void processTimeout(const QString &s);
     void processError(const QString &s);
     void showRequest(const QString &s);
+    void processState(const QString &s);
+    void processBytesCtr(const QString &s);
 
 private slots:
     void on_connectButton_clicked();
