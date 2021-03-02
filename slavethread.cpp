@@ -179,6 +179,7 @@ void SlaveThread::run()
                 parserState = Idle;
                 bytesCtr = 0;
                 emit changeState("Timeout error. Waiting for next file.");
+                emit updateProgressBar(bytesCtr);
                 emit updateBytes(bytesCtr);
             }
         }
