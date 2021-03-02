@@ -57,7 +57,7 @@
 SlaveThread::SlaveThread(QObject *parent) :
     QThread(parent), md5Calc(QCryptographicHash::Md5)
 {
-    rawFile.setFileName("outRawFile.bin");
+    rawFile.setFileName("outRawFile.jpg");
     rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
 }
 
@@ -101,6 +101,7 @@ void SlaveThread::run()
     receivedData = serial.readAll();
     receivedData = 0;
     filledData = 0;
+    emit configureProgressBar(10000);
     emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
 
     while (!m_quit) {
@@ -108,7 +109,7 @@ void SlaveThread::run()
             bytesCtr += serial.bytesAvailable();
             receivedData = serial.readAll();
             filledData.append(receivedData);
-            emit text(QString(filledData.toHex()));
+            emit text(QString(receivedData.toHex()));
             emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
             switch (parserState) {
             case Idle:
@@ -132,6 +133,7 @@ void SlaveThread::run()
                     fileSize = size.toUInt(&convResult, 16);
                     parserState = Data;
                     emit changeState(tr("File size %1kB. Receiving Data").arg(fileSize));
+                    emit configureProgressBar(8+fileSize+16);
                 }
                 break;
             case Data:
@@ -142,7 +144,6 @@ void SlaveThread::run()
                 break;
             case CRC:
                 image = filledData.mid(8,fileSize);
-                rawFile.write(image);
                 imageMd5 = md5Calc.hash(image, QCryptographicHash::Md5);
                 if (bytesCtr>=8+fileSize+16) {
                     parserState = Checking_CRC;
@@ -150,8 +151,14 @@ void SlaveThread::run()
                     receivedMd5 = filledData.right(16);
                     if (receivedMd5 == imageMd5) {
                         parserState = CRC_Valid;
+                        rawFile.write(image);
                         emit changeState("CRC Valid");
                     }
+                    else {
+                        parserState = CRC_Invalid;
+                        emit changeState("CRC Invalid");
+                    }
+                    rawFile.close();
                 }
                 break;
             case Checking_CRC:
@@ -163,6 +170,7 @@ void SlaveThread::run()
             case Received:
                 break;
             }
+            emit updateProgressBar(bytesCtr);
         }
     }
 

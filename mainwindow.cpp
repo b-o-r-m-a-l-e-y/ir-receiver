@@ -19,6 +19,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_thread, &SlaveThread::text, this, &MainWindow::processText);
     connect(&m_thread, &SlaveThread::changeState, this, &MainWindow::processState);
     connect(&m_thread, &SlaveThread::updateBytes, this, &MainWindow::processBytesCtr);
+    connect(&m_thread, &SlaveThread::configureProgressBar, this, &MainWindow::configureProgressBar);
+    connect(&m_thread, &SlaveThread::updateProgressBar, this, &MainWindow::updateProgressBar);
+
+    updateProgressBar(0);
 }
 
 MainWindow::~MainWindow()
@@ -69,9 +73,19 @@ void MainWindow::processBytesCtr(const QString &s)
     ui->BytesCtrLabel->setText(s);
 }
 
+void MainWindow::updateProgressBar(int value)
+{
+    ui->progressBar->setValue(value);
+}
+
 void MainWindow::activateRunButton()
 {
     ui->connectButton->setEnabled(true);
+}
+
+void MainWindow::configureProgressBar(int value)
+{
+    ui->progressBar->setRange(0, value);
 }
 
 void MainWindow::on_connectButton_clicked()

@@ -37,6 +37,8 @@ signals:
     void text(const QString &s);
     void changeState(const QString &s);
     void updateBytes(const QString &s);
+    void updateProgressBar(int);
+    void configureProgressBar(int);
 
 private:
     void run() override;

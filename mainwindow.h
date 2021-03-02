@@ -23,6 +23,8 @@ public:
     void showRequest(const QString &s);
     void processState(const QString &s);
     void processBytesCtr(const QString &s);
+    void updateProgressBar(int value);
+    void configureProgressBar(int value);
 
 private slots:
     void on_connectButton_clicked();

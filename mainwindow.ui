@@ -6,60 +6,64 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>290</width>
-    <height>303</height>
+    <width>250</width>
+    <height>280</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>19</x>
-      <y>19</y>
-      <width>251</width>
-      <height>221</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QComboBox" name="comPortsComboBox"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="connectButton">
-       <property name="text">
-        <string>Connect</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTextEdit" name="textEdit"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="statusLabel">
-       <property name="text">
-        <string>Status:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="BytesCtrLabel">
-       <property name="text">
-        <string>Bytes received:</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QComboBox" name="comPortsComboBox"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="connectButton">
+        <property name="text">
+         <string>Connect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="textEdit"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="statusLabel">
+        <property name="text">
+         <string>Status:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="BytesCtrLabel">
+        <property name="text">
+         <string>Bytes received:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+         <number>24</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>290</width>
+     <width>250</width>
      <height>23</height>
     </rect>
    </property>
