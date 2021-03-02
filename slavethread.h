@@ -5,6 +5,8 @@
 #include <QThread>
 #include <QWaitCondition>
 #include <QFile>
+#include <QCryptographicHash>
+
 
 enum ParserState {
     Idle = 0,
@@ -12,6 +14,9 @@ enum ParserState {
     Length,
     Data,
     CRC,
+    Checking_CRC,
+    CRC_Valid,
+    CRC_Invalid,
     Received
 };
 
@@ -49,6 +54,11 @@ private:
 
     QByteArray filledData;
     QByteArray image;
+
+    QCryptographicHash md5Calc;
+    QByteArray imageMd5 = 0;
+
+    QByteArray receivedMd5;
 };
 
 #endif // SLAVETHREAD_H

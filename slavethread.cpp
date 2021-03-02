@@ -52,11 +52,10 @@
 
 #include <QSerialPort>
 #include <QTime>
-#include <QFile>
-#include <QTextStream>
+//#include <QFile>
 
 SlaveThread::SlaveThread(QObject *parent) :
-    QThread(parent)
+    QThread(parent), md5Calc(QCryptographicHash::Md5)
 {
     rawFile.setFileName("outRawFile.bin");
     rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -138,20 +137,32 @@ void SlaveThread::run()
             case Data:
                 if (bytesCtr>=8+fileSize) {
                     parserState = CRC;
-                    //emit changeState("End of Data");
+                    emit changeState("End of Data");
                 }
                 break;
             case CRC:
+                image = filledData.mid(8,fileSize);
+                rawFile.write(image);
+                imageMd5 = md5Calc.hash(image, QCryptographicHash::Md5);
                 if (bytesCtr>=8+fileSize+16) {
-                    parserState = Received;
-                    //emit changeState("CRC catched");
+                    parserState = Checking_CRC;
+                    emit changeState("CRC catched");
+                    receivedMd5 = filledData.right(16);
+                    if (receivedMd5 == imageMd5) {
+                        parserState = CRC_Valid;
+                        emit changeState("CRC Valid");
+                    }
                 }
+                break;
+            case Checking_CRC:
+                break;
+            case CRC_Valid:
+                break;
+            case CRC_Invalid:
                 break;
             case Received:
                 break;
             }
-            //emit request(tr("Data received"));
-            rawFile.write(receivedData);
         }
     }
 
