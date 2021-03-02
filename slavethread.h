@@ -32,7 +32,6 @@ public:
     QByteArray receivedData;
 
 signals:
-    void request(const QString &s);
     void error(const QString &s);
     void text(const QString &s);
     void changeState(const QString &s);
@@ -61,6 +60,7 @@ private:
     QByteArray imageMd5 = 0;
 
     QByteArray receivedMd5;
+    int receivedFilesCounter = 0;
 };
 
 #endif // SLAVETHREAD_H

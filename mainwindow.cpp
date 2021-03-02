@@ -14,7 +14,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowTitle(tr("IR Reciever"));
 
-    connect(&m_thread, &SlaveThread::request, this,&MainWindow::showRequest);
     connect(&m_thread, &SlaveThread::error, this, &MainWindow::processError);
     connect(&m_thread, &SlaveThread::text, this, &MainWindow::processText);
     connect(&m_thread, &SlaveThread::changeState, this, &MainWindow::processState);
@@ -37,19 +36,6 @@ void MainWindow::startSlave()
     m_thread.startSlave(ui->comPortsComboBox->currentText(),
                         10000,
                         comResponse);
-}
-
-void MainWindow::showRequest(const QString &s)
-{
-    /*
-    ui->textEdit->setText(tr("Traffic, transaction #%1:"
-                               "\n\r-request: %2"
-                               "\n\r-response: %3")
-                            .arg(++m_transactionCount)
-                            .arg(s)
-                            .arg(comResponse));
-    */
-    //ui->statusLabel->setText(tr("Receiving data"));
 }
 
 void MainWindow::processError(const QString &s)

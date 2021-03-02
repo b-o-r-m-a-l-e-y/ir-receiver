@@ -20,7 +20,6 @@ public:
     void activateRunButton();
     void processText(const QString &s);
     void processError(const QString &s);
-    void showRequest(const QString &s);
     void processState(const QString &s);
     void processBytesCtr(const QString &s);
     void updateProgressBar(int value);
