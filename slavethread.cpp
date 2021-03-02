@@ -83,7 +83,6 @@ void SlaveThread::run()
     m_mutex.lock();
     QString currentPortName;
     currentPortName = m_portName;
-    int currentWaitTimeout = m_waitTimeout;
     m_mutex.unlock();
 
     QSerialPort serial;
@@ -93,14 +92,15 @@ void SlaveThread::run()
                    .arg(m_portName).arg(serial.error()));
         return;
     }
-    emit changeState("Serial port opened.");
+    emit changeState("Serial port opened. Waiting for file.");
     parserState = Idle;
     bytesCtr = 0;
     receivedData = serial.readAll();
     receivedData = 0;
     filledData = 0;
     emit configureProgressBar(10000);
-    emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
+    emit updateBytes(bytesCtr);
+    emit updateFilesCounter(receivedFilesCounter);
 
     while (!m_quit) {
         if (serial.waitForReadyRead(1000)) {
@@ -108,7 +108,7 @@ void SlaveThread::run()
             receivedData = serial.readAll();
             filledData.append(receivedData);
             emit text(QString(receivedData.toHex()));
-            emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
+            emit updateBytes(bytesCtr);
             switch (parserState) {
             case Idle:
                 if (bytesCtr>0){
@@ -144,7 +144,7 @@ void SlaveThread::run()
                 image = filledData.mid(8,fileSize);
                 imageMd5 = md5Calc.hash(image, QCryptographicHash::Md5);
                 if (bytesCtr>=8+fileSize+16) {
-                    parserState = Checking_CRC;
+                    parserState = Idle;
                     emit changeState("CRC catched");
                     receivedMd5 = filledData.right(16);
                     if (receivedMd5 == imageMd5) {
@@ -153,27 +153,20 @@ void SlaveThread::run()
                         rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
                         rawFile.write(image);
                         rawFile.close();
-                        parserState = Idle;
                         bytesCtr = 0;
                         receivedFilesCounter++;
-                        emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
-                        emit changeState("CRC Correct");
+                        emit updateFilesCounter(receivedFilesCounter);
+                        emit updateBytes(bytesCtr);
+                        emit changeState("CRC Correct. Successful receive.");
                     }
                     else {
                         // Invalid CRC
-                        parserState = Idle;
                         bytesCtr = 0;
-                        emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
-                        emit changeState("CRC Invalid");
+                        emit updateBytes(bytesCtr);
+                        emit changeState("CRC Invalid. File rejected.");
                     }
                     rawFile.close();
                 }
-                break;
-            case Checking_CRC:
-                break;
-            case CRC_Valid:
-                break;
-            case CRC_Invalid:
                 break;
             case Received:
                 break;
@@ -181,7 +174,13 @@ void SlaveThread::run()
             emit updateProgressBar(bytesCtr);
         }
         else {
-            parserState = Idle;
+            // If there was no data received after 1 second
+            if (parserState != Idle) {
+                parserState = Idle;
+                bytesCtr = 0;
+                emit changeState("Timeout error. Waiting for next file.");
+                emit updateBytes(bytesCtr);
+            }
         }
     }
 

@@ -13,9 +13,6 @@ enum ParserState {
     Length,
     Data,
     CRC,
-    Checking_CRC,
-    CRC_Valid,
-    CRC_Invalid,
     Received
 };
 
@@ -34,9 +31,10 @@ signals:
     void error(const QString &s);
     void text(const QString &s);
     void changeState(const QString &s);
-    void updateBytes(const QString &s);
+    void updateBytes(int);
     void updateProgressBar(int);
     void configureProgressBar(int);
+    void updateFilesCounter(int);
 
 private:
     void run() override;

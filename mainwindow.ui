@@ -7,11 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>250</width>
-    <height>280</height>
+    <height>316</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>houston_app.ico</normaloff>houston_app.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="enabled">
@@ -44,6 +48,13 @@
        <widget class="QLabel" name="BytesCtrLabel">
         <property name="text">
          <string>Bytes received:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="filesCtrLabel">
+        <property name="text">
+         <string>Files received:</string>
         </property>
        </widget>
       </item>

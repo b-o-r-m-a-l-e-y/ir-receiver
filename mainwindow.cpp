@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_thread, &SlaveThread::updateBytes, this, &MainWindow::processBytesCtr);
     connect(&m_thread, &SlaveThread::configureProgressBar, this, &MainWindow::configureProgressBar);
     connect(&m_thread, &SlaveThread::updateProgressBar, this, &MainWindow::updateProgressBar);
+    connect(&m_thread, &SlaveThread::updateFilesCounter, this, &MainWindow::processFilesCtr);
 
     updateProgressBar(0);
 }
@@ -54,9 +55,9 @@ void MainWindow::processState(const QString &s)
     ui->statusLabel->setText(s);
 }
 
-void MainWindow::processBytesCtr(const QString &s)
+void MainWindow::processBytesCtr(int ctr)
 {
-    ui->BytesCtrLabel->setText(s);
+    ui->BytesCtrLabel->setText(tr("Bytes received: %1.").arg(QString::number(ctr)));
 }
 
 void MainWindow::updateProgressBar(int value)
@@ -72,6 +73,11 @@ void MainWindow::activateRunButton()
 void MainWindow::configureProgressBar(int value)
 {
     ui->progressBar->setRange(0, value);
+}
+
+void MainWindow::processFilesCtr(int ctr)
+{
+    ui->filesCtrLabel->setText(tr("Files received: %1.").arg(ctr));
 }
 
 void MainWindow::on_connectButton_clicked()

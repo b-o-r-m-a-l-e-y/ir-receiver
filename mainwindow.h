@@ -21,7 +21,8 @@ public:
     void processText(const QString &s);
     void processError(const QString &s);
     void processState(const QString &s);
-    void processBytesCtr(const QString &s);
+    void processBytesCtr(int);
+    void processFilesCtr(int);
     void updateProgressBar(int value);
     void configureProgressBar(int value);
 
