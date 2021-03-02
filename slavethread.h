@@ -25,18 +25,17 @@ public:
 
     void startSlave(const QString &portName, int waitTimeout, const QString &response);
     QByteArray receivedData;
-    char buffer;
 
 signals:
     void request(const QString &s);
     void error(const QString &s);
-    void timeout(const QString &s);
+    void text(const QString &s);
     void changeState(const QString &s);
     void updateBytes(const QString &s);
 
 private:
     void run() override;
-    QByteArray PREAMBLE = QByteArray::fromHex(QString("DEADBEEF").toUtf8());
+    const QString preamble = QString("deadbeef").toUtf8();
 
     QString m_portName;
     QString m_response;
@@ -48,6 +47,8 @@ private:
     qint64 fileSize = 0;
     qint64 bytesCtr = 0;
 
+    QByteArray filledData;
+    QByteArray image;
 };
 
 #endif // SLAVETHREAD_H

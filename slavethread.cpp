@@ -83,82 +83,74 @@ void SlaveThread::startSlave(const QString &portName, int waitTimeout, const QSt
 
 void SlaveThread::run()
 {
-    bool currentPortNameChanged = false;
-
     m_mutex.lock();
     QString currentPortName;
-    if (currentPortName != m_portName) {
-        currentPortName = m_portName;
-        currentPortNameChanged = true;
-    }
-
+    currentPortName = m_portName;
     int currentWaitTimeout = m_waitTimeout;
-    QString currentRespone = m_response;
     m_mutex.unlock();
-    QSerialPort serial;
 
+    QSerialPort serial;
     serial.setPortName(currentPortName);
     if (!serial.open(QIODevice::ReadWrite)) {
         emit error(tr("Can't open %1, error code %2")
                    .arg(m_portName).arg(serial.error()));
         return;
     }
-    emit changeState("Serial port opened");
+    emit changeState("Serial port opened.");
     parserState = Idle;
     bytesCtr = 0;
+    receivedData = serial.readAll();
+    receivedData = 0;
+    filledData = 0;
+    emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
 
     while (!m_quit) {
         if (serial.waitForReadyRead(currentWaitTimeout)) {
-            //serial.read(&buffer, 1);
-            //emit request(tr("Data received"));
-            // read request
             bytesCtr += serial.bytesAvailable();
             receivedData = serial.readAll();
-            while (serial.waitForReadyRead(10))
-            {
-                bytesCtr += serial.bytesAvailable();
-                receivedData += serial.readAll();
-                emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
-                switch (parserState) {
-                case Idle:
-                    if (bytesCtr>0){
-                        parserState = Preamble;
-                    }
-                    break;
-                case Preamble:
-                    if (bytesCtr>=4) {
-                        QByteArray tmp = receivedData.left(4);
-                        if (tmp == PREAMBLE) {
-                            parserState=Length;
-                            emit changeState("Preamble Catched");
-                        }
-                    }
-                    break;
-                case Length:
-                    if (bytesCtr>=8) {
-                        QByteArray size = receivedData.mid(4, 4);
-                        fileSize = size.toInt();
-                        parserState = Data;
-                        emit changeState(tr("File size %1. Receiving Data").arg(fileSize));
-                    }
-                    break;
-                case Data:
-                    if (bytesCtr>=8+fileSize) {
-                        parserState = CRC;
-                        emit changeState("End of Data");
-                    }
-                    break;
-                case CRC:
-                    if (bytesCtr>=8+fileSize+16) {
-                        parserState = Received;
-                        emit changeState("CRC catched");
-                    }
-                    break;
-                case Received:
-                    break;
+            filledData.append(receivedData);
+            emit text(QString(filledData.toHex()));
+            emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
+            switch (parserState) {
+            case Idle:
+                if (bytesCtr>0){
+                    parserState = Preamble;
                 }
+                break;
+            case Preamble:
+                if (bytesCtr>=4) {
+                    QString tmp = QString(filledData.toHex().left(8));
+                    if (tmp == preamble) {
+                        parserState=Length;
+                        emit changeState("Preamble Catched");
+                    }
+                }
+                break;
+            case Length:
+                if (bytesCtr>=8) {
+                    QString size = QString(filledData.toHex().mid(8, 8));
+                    bool convResult = false;
+                    fileSize = size.toUInt(&convResult, 16);
+                    parserState = Data;
+                    emit changeState(tr("File size %1kB. Receiving Data").arg(fileSize));
+                }
+                break;
+            case Data:
+                if (bytesCtr>=8+fileSize) {
+                    parserState = CRC;
+                    //emit changeState("End of Data");
+                }
+                break;
+            case CRC:
+                if (bytesCtr>=8+fileSize+16) {
+                    parserState = Received;
+                    //emit changeState("CRC catched");
+                }
+                break;
+            case Received:
+                break;
             }
-            emit request(tr("Data received"));
+            //emit request(tr("Data received"));
             rawFile.write(receivedData);
         }
     }

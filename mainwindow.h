@@ -18,7 +18,7 @@ public:
     ~MainWindow();
     void startSlave();
     void activateRunButton();
-    void processTimeout(const QString &s);
+    void processText(const QString &s);
     void processError(const QString &s);
     void showRequest(const QString &s);
     void processState(const QString &s);

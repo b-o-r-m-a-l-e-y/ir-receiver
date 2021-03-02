@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(&m_thread, &SlaveThread::request, this,&MainWindow::showRequest);
     connect(&m_thread, &SlaveThread::error, this, &MainWindow::processError);
-    connect(&m_thread, &SlaveThread::timeout, this, &MainWindow::processTimeout);
+    connect(&m_thread, &SlaveThread::text, this, &MainWindow::processText);
     connect(&m_thread, &SlaveThread::changeState, this, &MainWindow::processState);
     connect(&m_thread, &SlaveThread::updateBytes, this, &MainWindow::processBytesCtr);
 }
@@ -45,7 +45,6 @@ void MainWindow::showRequest(const QString &s)
                             .arg(s)
                             .arg(comResponse));
     */
-    ui->textEdit->append(tr(&m_thread.buffer));
     //ui->statusLabel->setText(tr("Receiving data"));
 }
 
@@ -53,13 +52,11 @@ void MainWindow::processError(const QString &s)
 {
     activateRunButton();
     ui->statusLabel->setText(tr("Status: Not running, %1.").arg(s));
-    //m_trafficLabel->setText(tr("No traffic."));
 }
 
-void MainWindow::processTimeout(const QString &s)
+void MainWindow::processText(const QString &s)
 {
-    ui->textEdit->setText(tr("Status: Running, %1.").arg(s));
-    //m_trafficLabel->setText(tr("No traffic."));
+    ui->textEdit->setText(tr("Received Bytes: %1").arg(s));
 }
 
 void MainWindow::processState(const QString &s)
