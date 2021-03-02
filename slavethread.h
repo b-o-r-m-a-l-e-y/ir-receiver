@@ -7,7 +7,6 @@
 #include <QFile>
 #include <QCryptographicHash>
 
-
 enum ParserState {
     Idle = 0,
     Preamble,

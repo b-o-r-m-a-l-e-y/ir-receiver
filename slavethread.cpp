@@ -52,18 +52,16 @@
 
 #include <QSerialPort>
 #include <QTime>
-//#include <QFile>
+#include <QDebug>
 
 SlaveThread::SlaveThread(QObject *parent) :
     QThread(parent), md5Calc(QCryptographicHash::Md5)
 {
-    rawFile.setFileName("outRawFile.jpg");
-    rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
 }
 
 SlaveThread::~SlaveThread()
 {
-    rawFile.close();
+    if (rawFile.isOpen()) rawFile.close();
     m_mutex.lock();
     m_quit = true;
     m_mutex.unlock();
@@ -105,7 +103,7 @@ void SlaveThread::run()
     emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
 
     while (!m_quit) {
-        if (serial.waitForReadyRead(currentWaitTimeout)) {
+        if (serial.waitForReadyRead(1000)) {
             bytesCtr += serial.bytesAvailable();
             receivedData = serial.readAll();
             filledData.append(receivedData);
@@ -122,7 +120,7 @@ void SlaveThread::run()
                     QString tmp = QString(filledData.toHex().left(8));
                     if (tmp == preamble) {
                         parserState=Length;
-                        emit changeState("Preamble Catched");
+                        emit changeState("Preamble Catched.");
                     }
                 }
                 break;
@@ -132,7 +130,7 @@ void SlaveThread::run()
                     bool convResult = false;
                     fileSize = size.toUInt(&convResult, 16);
                     parserState = Data;
-                    emit changeState(tr("File size %1kB. Receiving Data").arg(fileSize));
+                    emit changeState(tr("File size %1kB. Receiving Data.").arg(fileSize));
                     emit configureProgressBar(8+fileSize+16);
                 }
                 break;
@@ -150,12 +148,22 @@ void SlaveThread::run()
                     emit changeState("CRC catched");
                     receivedMd5 = filledData.right(16);
                     if (receivedMd5 == imageMd5) {
-                        parserState = CRC_Valid;
+                        // Valid CRC
+                        rawFile.setFileName(tr("%1.jpg").arg(receivedFilesCounter));
+                        rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
                         rawFile.write(image);
-                        emit changeState("CRC Valid");
+                        rawFile.close();
+                        parserState = Idle;
+                        bytesCtr = 0;
+                        receivedFilesCounter++;
+                        emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
+                        emit changeState("CRC Correct");
                     }
                     else {
-                        parserState = CRC_Invalid;
+                        // Invalid CRC
+                        parserState = Idle;
+                        bytesCtr = 0;
+                        emit updateBytes(tr("Bytes received: %1").arg(QString::number(bytesCtr)));
                         emit changeState("CRC Invalid");
                     }
                     rawFile.close();
@@ -171,6 +179,9 @@ void SlaveThread::run()
                 break;
             }
             emit updateProgressBar(bytesCtr);
+        }
+        else {
+            parserState = Idle;
         }
     }
 
