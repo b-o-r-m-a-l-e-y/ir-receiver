@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     for (const QSerialPortInfo &info : infos)
         ui->comPortsComboBox->addItem(info.portName());
 
-    setWindowTitle(tr("IR Reciever"));
+    setWindowTitle(tr("IR Receiver"));
 
     connect(&m_thread, &SlaveThread::error, this, &MainWindow::processError);
     connect(&m_thread, &SlaveThread::text, this, &MainWindow::processText);
