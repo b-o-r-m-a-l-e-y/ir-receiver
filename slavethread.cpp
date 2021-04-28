@@ -51,7 +51,7 @@
 #include "slavethread.h"
 
 #include <QSerialPort>
-#include <QTime>
+#include <QDateTime>
 #include <QDebug>
 #include <QDateTime>
 
@@ -150,7 +150,7 @@ void SlaveThread::run()
                     receivedMd5 = filledData.right(16);
                     if (receivedMd5 == imageMd5) {
                         // Valid CRC
-                        rawFile.setFileName(tr("%1.jpg").arg(QTime::currentTime().toString("dd-MM-yyyy-hh:mm:ss")));
+                        rawFile.setFileName(tr("%1.jpg").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy-hh:mm:ss")));
                         rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
                         rawFile.write(image);
                         receivedFilesCounter++;
@@ -166,6 +166,7 @@ void SlaveThread::run()
                     bytesCtr = 0;
                     fileSize = 0;
                     filledData = 0;
+                    receivedData = 0;
                     rawFile.close();
                 }
                 break;
@@ -179,6 +180,9 @@ void SlaveThread::run()
             if (parserState != Idle) {
                 parserState = Idle;
                 bytesCtr = 0;
+                fileSize = 0;
+                filledData = 0;
+                receivedData = 0;
                 emit changeState("Timeout error. Waiting for next file.");
                 emit updateProgressBar(bytesCtr);
                 emit updateBytes(bytesCtr);
