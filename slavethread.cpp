@@ -53,6 +53,7 @@
 #include <QSerialPort>
 #include <QTime>
 #include <QDebug>
+#include <QDateTime>
 
 SlaveThread::SlaveThread(QObject *parent) :
     QThread(parent), md5Calc(QCryptographicHash::Md5)
@@ -119,7 +120,7 @@ void SlaveThread::run()
                 if (bytesCtr>=4) {
                     QString tmp = QString(filledData.toHex().left(8));
                     if (tmp == preamble) {
-                        parserState=Length;
+                        parserState = Length;
                         emit changeState("Preamble Catched.");
                     }
                 }
@@ -149,11 +150,9 @@ void SlaveThread::run()
                     receivedMd5 = filledData.right(16);
                     if (receivedMd5 == imageMd5) {
                         // Valid CRC
-                        rawFile.setFileName(tr("%1.jpg").arg(receivedFilesCounter));
+                        rawFile.setFileName(tr("%1.jpg").arg(QTime::currentTime().toString("dd-MM-yyyy-hh:mm:ss")));
                         rawFile.open(QIODevice::WriteOnly | QIODevice::Text);
                         rawFile.write(image);
-                        rawFile.close();
-                        bytesCtr = 0;
                         receivedFilesCounter++;
                         emit updateFilesCounter(receivedFilesCounter);
                         emit updateBytes(bytesCtr);
@@ -161,10 +160,12 @@ void SlaveThread::run()
                     }
                     else {
                         // Invalid CRC
-                        bytesCtr = 0;
                         emit updateBytes(bytesCtr);
                         emit changeState("CRC Invalid. File rejected.");
                     }
+                    bytesCtr = 0;
+                    fileSize = 0;
+                    filledData = 0;
                     rawFile.close();
                 }
                 break;
